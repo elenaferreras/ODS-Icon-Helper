@@ -1,17 +1,215 @@
-<h2>Rectangle Creator</h2>
-<p>Count: <input id="count" type="number" value="5"></p>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
-<script>
-
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-shapes', count } }, '*')
-}
-
-document.getElementById('cancel').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
-}
-
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 16px;
+      margin: 0;
+      background: #ffffff;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    
+    .helper-text {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #18a0fb;
+    }
+    
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      background: white;
+      box-sizing: border-box;
+    }
+    
+    select:focus {
+      outline: none;
+      border-color: #18a0fb;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    input[type="checkbox"] {
+      margin-right: 8px;
+      width: 16px;
+      height: 16px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    button.primary {
+      background: #18a0fb;
+      color: white;
+    }
+    
+    button.primary:hover {
+      background: #0d8ce8;
+    }
+    
+    button.secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    button.secondary:hover {
+      background: #e0e0e0;
+    }
+    
+    .error {
+      color: #e53935;
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+    
+    .error.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-group">
+    <label for="iconName">Icon Name</label>
+    <input type="text" id="iconName" placeholder="ArrowLeft">
+    <div class="helper-text">Use PascalCase (e.g. ArrowLeft, HomeFilled)</div>
+    <div class="error" id="nameError">Please enter an icon name</div>
+  </div>
+  
+  <div class="form-group">
+    <label for="family">Family</label>
+    <select id="family">
+      <option value="Filled">Filled</option>
+      <option value="Outlined">Outlined</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label for="rtl">RTL</label>
+    <select id="rtl">
+      <option value="True">True</option>
+      <option value="False">False</option>
+    </select>
+  </div>
+  
+  <div class="checkbox-group">
+    <input type="checkbox" id="convertStroke">
+    <label for="convertStroke" style="margin: 0;">Convert to Outline Stroke + Flatten</label>
+  </div>
+  
+  <div class="error" id="selectionError">Please select at least one node</div>
+  
+  <div class="button-group">
+    <button class="primary" id="generate">Generate Icon</button>
+    <button class="secondary" id="cancel">Cancel</button>
+  </div>
+  
+  <script>
+    const iconNameInput = document.getElementById('iconName');
+    const familySelect = document.getElementById('family');
+    const rtlSelect = document.getElementById('rtl');
+    const convertStrokeCheckbox = document.getElementById('convertStroke');
+    const generateButton = document.getElementById('generate');
+    const cancelButton = document.getElementById('cancel');
+    const nameError = document.getElementById('nameError');
+    const selectionError = document.getElementById('selectionError');
+    
+    // Handle Generate Icon button click
+    generateButton.onclick = () => {
+      // Hide errors
+      nameError.classList.remove('show');
+      selectionError.classList.remove('show');
+      
+      const iconName = iconNameInput.value.trim();
+      const family = familySelect.value;
+      const rtl = rtlSelect.value;
+      const convertStroke = convertStrokeCheckbox.checked;
+      
+      // Validate icon name
+      if (!iconName) {
+        nameError.classList.add('show');
+        return;
+      }
+      
+      // Send message to plugin code
+      parent.postMessage({
+        pluginMessage: {
+          type: 'generate-icon',
+          iconName: iconName,
+          family: family,
+          rtl: rtl,
+          convertStroke: convertStroke
+        }
+      }, '*');
+    };
+    
+    // Handle Cancel button click
+    cancelButton.onclick = () => {
+      parent.postMessage({
+        pluginMessage: {
+          type: 'cancel'
+        }
+      }, '*');
+    };
+    
+    // Listen for selection changes from plugin
+    window.addEventListener('message', (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg && msg.type === 'selection-changed') {
+        if (msg.hasSelection) {
+          selectionError.classList.remove('show');
+        } else {
+          selectionError.classList.add('show');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
