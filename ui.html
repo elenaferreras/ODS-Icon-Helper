@@ -134,17 +134,17 @@
   <div class="form-group">
     <label for="rtl">RTL</label>
     <select id="rtl">
-      <option value="True">True</option>
       <option value="False">False</option>
+      <option value="True">True</option>
     </select>
   </div>
   
   <div class="checkbox-group">
-    <input type="checkbox" id="convertStroke">
+    <input type="checkbox" id="convertStroke" checked>
     <label for="convertStroke" style="margin: 0;">Convert to Outline Stroke + Flatten</label>
   </div>
   
-  <div class="error" id="selectionError">Please select at least one node</div>
+  <div class="error" id="selectionError">Please select exactly one Frame</div>
   
   <div class="button-group">
     <button class="primary" id="generate">Generate Icon</button>
@@ -203,7 +203,7 @@
     window.addEventListener('message', (event) => {
       const msg = event.data.pluginMessage;
       if (msg && msg.type === 'selection-changed') {
-        if (msg.hasSelection) {
+        if (msg.hasSelection && msg.isFrame) {
           selectionError.classList.remove('show');
         } else {
           selectionError.classList.add('show');
